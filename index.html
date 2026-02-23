@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Admin Panel - Nor</title>
+    <!-- ফন্ট এবং আইকন -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2d9cdb;
+            --dark: #050a12;
+            --bg: #f4f7f6;
+            --white: #ffffff;
+            --red: #e74c3c;
+            --yellow: #f1c40f;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background: var(--bg); color: #333; overflow-x: hidden; }
+
+        /* Top Bar */
+        .top-bar {
+            background: var(--dark);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .top-bar h2 { font-size: 1.1rem; color: var(--primary); font-weight: 700; }
+        .logout-btn {
+            background: var(--red);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 15px; }
+
+        /* Navigation Grid (3 buttons per row) */
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .nav-card {
+            background: var(--white);
+            padding: 15px 5px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .nav-card i { font-size: 1.4rem; color: var(--primary); }
+        .nav-card span { font-size: 11px; font-weight: 700; color: #444; text-transform: uppercase; }
+        
+        /* Visitor Badge in Dashboard Button */
+        .visitor-badge {
+            background: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        .nav-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+        .nav-card.active { background: var(--primary); border-color: var(--primary); box-shadow: 0 8px 15px rgba(45,156,219,0.3); }
+        .nav-card.active i, .nav-card.active span, .nav-card.active .visitor-badge { color: white; }
+        .nav-card.active .visitor-badge { background: rgba(255,255,255,0.2); }
+
+        /* Content Panel Section */
+        .panel {
+            display: none; /* Initially hidden */
+            background: var(--white);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 50px;
+            animation: fadeIn 0.4s ease;
+        }
+        .panel.active { display: block; } /* Show only active panel */
+
+        h3 { 
+            margin-bottom: 25px; 
+            font-size: 1.2rem; 
+            color: var(--dark);
+            border-left: 5px solid var(--primary);
+            padding-left: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Form Styling */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #555; }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        input:focus, textarea:focus { border-color: var(--primary); background: #f9fcff; }
+
+        .btn-action {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 14px;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        .btn-action:hover { background: #1a7bb5; box-shadow: 0 5px 15px rgba(45,156,219,0.3); }
+        .btn-cancel { background: #95a5a6; margin-top: 8px; }
+
+        /* Data List Styling */
+        .data-list { margin-top: 30px; }
+        .list-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border: 1px solid #eee;
+        }
+        .item-preview { display: flex; align-items: center; gap: 12px; overflow: hidden; }
+        .item-preview img { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; background: #ddd; }
+        .item-preview div { font-size: 13px; font-weight: 600; color: #333; }
+
+        .action-btns { display: flex; gap: 8px; }
+        .small-btn { padding: 6px 12px; border-radius: 5px; border: none; color: white; cursor: pointer; font-size: 11px; font-weight: 600; }
+        .bg-edit { background: var(--yellow); color: #333; }
+        .bg-del { background: var(--red); }
+
+        /* Login Screen */
+        #loginOverlay { position: fixed; inset: 0; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .login-box { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .login-box h2 { color: var(--dark); margin-bottom: 25px; font-weight: 700; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Mobile Specific */
+        @media (max-width: 600px) {
+            .nav-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .nav-card { padding: 12px 5px; }
+            .nav-card i { font-size: 1.2rem; }
+            .nav-card span { font-size: 9px; }
+            .container { padding: 0 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Section -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <i class="fas fa-shield-alt" style="font-size: 50px; color: var(--primary); margin-bottom: 15px;"></i>
+            <h2>Admin Login</h2>
+            <input type="email" id="loginEmail" placeholder="Email Address" style="margin-bottom: 15px;">
+            <input type="password" id="loginPass" placeholder="Password" style="margin-bottom: 15px;">
+            <button class="btn-action" onclick="handleLogin()">Login Securely</button>
+            <p id="loginError" style="color:red; font-size:12px; margin-top:15px; display:none;"></p>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="adminApp" style="display:none;">
+        <div class="top-bar">
+            <h2>DEVELOPER NOR</h2>
+            <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+
+        <div class="container">
+            <!-- Smart Tab Menu Grid (3 per row) -->
+            <div class="nav-grid">
+                <div class="nav-card active" onclick="switchTab('dashboardPanel')">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dash</span>
+                    <div class="visitor-badge" id="visitorBadge">0</div>
+                </div>
+                <div class="nav-card" onclick="switchTab('heroPanel')">
+                    <i class="fas fa-tv"></i>
+                    <span>Hero</span>
+                </div>
+                <div class="nav-card" onclick="switchTab('servicesPanel')">
+                    <i class="fas fa-cog"></i>
+                    <span>Service</span>
+                </div>
+                <div class="nav-card" onclick="switchTab('catPostsPanel')">
+                    <i class="fas fa-images"></i>
+                    <span>Gallery</span>
+                </div>
+                <div class="nav-card" onclick="switchTab('aboutPanel')">
+                    <i class="fas fa-user-tie"></i>
+                    <span>About</span>
+                </div>
+                <div class="nav-card" onclick="switchTab('projectsPanel')">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Work</span>
+                </div>
+                <div class="nav-card" onclick="switchTab('blogPanel')">
+                    <i class="fab fa-youtube"></i>
+                    <span>Blog</span>
+                </div>
+                <div class="nav-card" onclick="switchTab('whyPanel')">
+                    <i class="fas fa-star"></i>
+                    <span>Features</span>
+                </div>
+                <div class="nav-card" onclick="switchTab('settingsPanel')">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Setup</span>
+                </div>
+                <div class="nav-card" onclick="switchTab('messagesPanel')" style="grid-column: span 3;">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>Inbox / Messages</span>
+                </div>
+            </div>
+
+            <!-- Dashboard Panel -->
+            <div id="dashboardPanel" class="panel active">
+                <h3>System Overview</h3>
+                <div style="background: #eef7ff; padding: 40px; border-radius: 15px; text-align: center;">
+                    <i class="fas fa-users" style="font-size: 3rem; color: var(--primary); margin-bottom: 15px;"></i>
+                    <p style="font-weight: 600; color: #666; font-size: 1.1rem;">Total Website Visitors</p>
+                    <h1 id="visitorCountLarge" style="font-size: 4.5rem; color: var(--dark); font-weight: 800;">0</h1>
+                </div>
+            </div>
+
+            <!-- Hero Panel -->
+            <div id="heroPanel" class="panel">
+                <h3>Update Hero Section</h3>
+                <div class="form-group"><label>Title</label><input type="text" id="heroTitle"></div>
+                <div class="form-group"><label>Subtitle</label><input type="text" id="heroSubtitle"></div>
+                <div class="form-group"><label>Short Description</label><textarea id="heroDesc" rows="3"></textarea></div>
+                <div class="form-group"><label>Background Image</label><input type="file" id="heroImage"></div>
+                <button class="btn-action" onclick="updateHero()">Save Hero Changes</button>
+            </div>
+
+            <!-- Services Panel -->
+            <div id="servicesPanel" class="panel">
+                <h3>Services Manager</h3>
+                <input type="hidden" id="svcEditKey">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="svcCategory"><option value="web">Web Development</option><option value="graphic">Software/Apps</option><option value="others">Graphic Design</option></select>
+                </div>
+                <div class="form-group"><label>Service Title</label><input type="text" id="svcTitle"></div>
+                <div class="form-group"><label>Icon/Image</label><input type="file" id="svcImage"></div>
+                <button class="btn-action" id="svcBtn" onclick="saveService()">Add Service</button>
+                <button class="btn-action btn-cancel" id="svcCancel" style="display:none;" onclick="resetForm('svc')">Cancel Edit</button>
+                <div class="data-list" id="servicesList"></div>
+            </div>
+
+            <!-- Category Posts Panel -->
+            <div id="catPostsPanel" class="panel">
+                <h3>Gallery / Service Posts</h3>
+                <input type="hidden" id="cpEditKey">
+                <div class="form-group"><label>Select Main Service</label><select id="cpParentService"></select></div>
+                <div class="form-group"><label>Post Title</label><input type="text" id="cpTitle"></div>
+                <div class="form-group"><label>Image Upload</label><input type="file" id="cpImage"></div>
+                <button class="btn-action" id="cpBtn" onclick="saveCategoryPost()">Post to Gallery</button>
+                <button class="btn-action btn-cancel" id="cpCancel" style="display:none;" onclick="resetForm('cp')">Cancel</button>
+                <div class="data-list" id="catPostsList"></div>
+            </div>
+
+            <!-- Blog Panel -->
+            <div id="blogPanel" class="panel">
+                <h3>Video & Blog Management</h3>
+                <input type="hidden" id="blogEditKey">
+                <div class="form-group"><label>Platform</label><select id="blogType"><option value="youtube">YouTube</option><option value="facebook">Facebook</option></select></div>
+                <div class="form-group"><label>Content Title</label><input type="text" id="blogTitle"></div>
+                <div class="form-group"><label>Video/Post Link</label><input type="text" id="blogLink"></div>
+                <div class="form-group"><label>Custom Thumbnail (Optional)</label><input type="file" id="blogImage"></div>
+                <button class="btn-action" id="blogBtn" onclick="saveBlog()">Save Content</button>
+                <button class="btn-action btn-cancel" id="blogCancel" style="display:none;" onclick="resetForm('blog')">Cancel</button>
+                <div class="data-list" id="blogList"></div>
+            </div>
+
+            <!-- About Panel -->
+            <div id="aboutPanel" class="panel">
+                <h3>About Norun Nabi</h3>
+                <div class="form-group"><label>Header Title</label><input type="text" id="aboutTitle"></div>
+                <div class="form-group"><label>Short Sub-title</label><input type="text" id="aboutSub"></div>
+                <div class="form-group"><label>Full Description / Bio</label><textarea id="aboutDesc" rows="6"></textarea></div>
+                <div class="form-group"><label>Profile Image</label><input type="file" id="aboutImage"></div>
+                <button class="btn-action" onclick="updateAbout()">Save Profile</button>
+            </div>
+
+            <!-- Projects Panel -->
+            <div id="projectsPanel" class="panel">
+                <h3>Portfolio / Projects</h3>
+                <input type="hidden" id="projEditKey">
+                <div class="form-group"><label>Project Status</label><select id="projCategory"><option value="complete">Finished</option><option value="running">In Progress</option><option value="upcoming">Plan/Design</option></select></div>
+                <div class="form-group"><label>Project Name</label><input type="text" id="projTitle"></div>
+                <div class="form-group"><label>Screenshot</label><input type="file" id="projImage"></div>
+                <button class="btn-action" id="projBtn" onclick="saveProject()">Add Project</button>
+                <button class="btn-action btn-cancel" id="projCancel" style="display:none;" onclick="resetForm('proj')">Cancel</button>
+                <div class="data-list" id="projectsList"></div>
+            </div>
+
+            <!-- Why Choose Us Panel -->
+            <div id="whyPanel" class="panel">
+                <h3>Unique Features (Why Us)</h3>
+                <input type="hidden" id="specEditKey">
+                <div class="form-group"><label>Small Icon Card Title</label><input type="text" id="specTitle"></div>
+                <div class="form-group"><label>Icon File</label><input type="file" id="specImage"></div>
+                <button class="btn-action" id="specBtn" onclick="saveSpeciality()">Add Icon Card</button>
+                <div id="specList" style="margin:20px 0;"></div>
+                <hr style="margin:30px 0;">
+                <div class="form-group"><label>Main Section Title</label><input type="text" id="whyTitle"></div>
+                <div class="form-group"><label>Section Detail Description</label><textarea id="whyDesc" rows="4"></textarea></div>
+                <div class="form-group"><label>Section Side Image</label><input type="file" id="whyImage"></div>
+                <button class="btn-action" onclick="updateWhyContent()">Save Content</button>
+            </div>
+
+            <!-- Settings Panel -->
+            <div id="settingsPanel" class="panel">
+                <h3>Global Configuration</h3>
+                <div class="form-group"><label>Website Logo</label><input type="file" id="siteLogo"><button class="btn-action" style="width:auto; padding:8px 20px;" onclick="updateLogo()">Update</button></div>
+                <hr style="margin:25px 0;">
+                <div class="form-group"><label>Official Email</label><input type="text" id="contactEmail"></div>
+                <div class="form-group"><label>Phone / Mobile</label><input type="text" id="contactPhone"></div>
+                <div class="form-group"><label>Office Address</label><input type="text" id="contactAddr"></div>
+                <div class="form-group"><label>Facebook Profile Link</label><input type="text" id="socFb"></div>
+                <div class="form-group"><label>LinkedIn / YouTube Link</label><input type="text" id="socLi"></div>
+                <div class="form-group"><label>GitHub / WhatsApp Link</label><input type="text" id="socGh"></div>
+                <button class="btn-action" onclick="updateContactInfo()">Save All Settings</button>
+            </div>
+
+            <!-- Inbox Panel -->
+            <div id="messagesPanel" class="panel">
+                <h3>Inbox (User Messages)</h3>
+                <div id="inboxContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Core -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <script>
+        // --- Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBy4OsohLvE4ar0zZpGs5Iz-qQMffdM6YE",
+            authDomain: "norun-nabi-parsonal.firebaseapp.com",
+            databaseURL: "https://norun-nabi-parsonal-default-rtdb.firebaseio.com",
+            projectId: "norun-nabi-parsonal",
+            storageBucket: "norun-nabi-parsonal.firebasestorage.app",
+            messagingSenderId: "562349101076",
+            appId: "1:562349101076:web:29ad3786356013ce42d701"
+        };
+        const IMGBB_API_KEY = "8ef301d629e27e060aa203980a4ee1bf";
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        // --- Auth Guard ---
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('adminApp').style.display = 'block';
+                initDashboard();
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('adminApp').style.display = 'none';
+            }
+        });
+
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            auth.signInWithEmailAndPassword(email, pass).catch(e => {
+                const el = document.getElementById('loginError');
+                el.style.display = 'block'; el.innerText = "Error: " + e.message;
+            });
+        }
+        function handleLogout() { if(confirm("Are you sure?")) auth.signOut().then(()=>location.reload()); }
+
+        // --- Navigation Logic ---
+        function switchTab(id) {
+            // Hide all panels
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            // Remove active state from all nav cards
+            document.querySelectorAll('.nav-card').forEach(n => n.classList.remove('active'));
+            
+            // Show requested panel
+            document.getElementById(id).classList.add('active');
+            // Set active state to clicked button
+            event.currentTarget.classList.add('active');
+            
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        // --- Data Initialization ---
+        function initDashboard() {
+            // Visitors Realtime
+            db.ref('siteStats/visitors').on('value', s => {
+                const val = s.val() || 0;
+                document.getElementById('visitorBadge').innerText = val;
+                document.getElementById('visitorCountLarge').innerText = val;
+            });
+
+            // Hero Section
+            db.ref('hero').once('value', s => { let d=s.val(); if(d){ document.getElementById('heroTitle').value=d.title; document.getElementById('heroSubtitle').value=d.subtitle; document.getElementById('heroDesc').value=d.desc; }});
+            
+            // About Section
+            db.ref('about').once('value', s => { let d=s.val(); if(d){ document.getElementById('aboutTitle').value=d.title; document.getElementById('aboutSub').value=d.subtitle; document.getElementById('aboutDesc').value=d.desc; }});
+            
+            // Why Choose Section
+            db.ref('whyChoose').once('value', s => { let d=s.val(); if(d){ document.getElementById('whyTitle').value=d.title; document.getElementById('whyDesc').value=d.desc; }});
+            
+            // Contact & Socials
+            db.ref('contactInfo').once('value', s => { let d=s.val(); if(d){ document.getElementById('contactEmail').value=d.email; document.getElementById('contactPhone').value=d.phone; document.getElementById('contactAddr').value=d.addr; }});
+            db.ref('socialLinks').once('value', s => { let d=s.val(); if(d){ document.getElementById('socFb').value=d.facebook; document.getElementById('socLi').value=d.linkedin; document.getElementById('socGh').value=d.github; }});
+            
+            // Database Listeners for Lists
+            db.ref('services').on('value', s => { 
+                renderList(s, 'servicesList', 'svc', 'services'); 
+                const sel = document.getElementById('cpParentService'); sel.innerHTML = '';
+                if(s.val()) Object.values(s.val()).forEach(v => sel.innerHTML += `<option value="${v.title}">${v.title}</option>`);
+            });
+            db.ref('projects').on('value', s => renderList(s, 'projectsList', 'proj', 'projects'));
+            db.ref('category_posts').on('value', s => renderList(s, 'catPostsList', 'cp', 'category_posts'));
+            db.ref('speciality').on('value', s => renderList(s, 'specList', 'spec', 'speciality'));
+            db.ref('blogs').on('value', s => renderList(s, 'blogList', 'blog', 'blogs'));
+            
+            // Inbox Messages
+            db.ref('contact_messages').on('value', s => {
+                const c = document.getElementById('inboxContainer'); c.innerHTML='';
+                if(s.val()) {
+                    Object.keys(s.val()).reverse().forEach(k => {
+                        const m = s.val()[k];
+                        c.innerHTML += `<div class="list-item">
+                            <div><b>${m.name}</b> (${m.email})<br><small>${m.date}</small><br><i>Sub: ${m.subject || 'N/A'}</i><p>${m.message}</p></div>
+                            <button class="small-btn bg-del" onclick="deleteItem('contact_messages/${k}')">Remove</button>
+                        </div>`;
+                    });
+                } else c.innerHTML='<p>Your inbox is empty.</p>';
+            });
+        }
+
+        // --- CRUD & Image Handling ---
+        async function uploadImage(id) {
+            const file = document.getElementById(id).files[0]; if(!file) return null;
+            const fd = new FormData(); fd.append("image", file);
+            let r = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {method:"POST", body:fd});
+            let d = await r.json(); return d.success ? d.data.url : null;
+        }
+
+        async function saveService() {
+            const k = document.getElementById('svcEditKey').value, t = document.getElementById('svcTitle').value;
+            if(!t) {alert("Title Required"); return;}
+            let img = await uploadImage('svcImage'); let data = {title:t, category:document.getElementById('svcCategory').value};
+            if(img) data.image=img; if(k) db.ref('services/'+k).update(data,()=>resetForm('svc')); else db.ref('services').push(data,()=>resetForm('svc'));
+        }
+
+        async function saveProject() {
+            const k = document.getElementById('projEditKey').value, t = document.getElementById('projTitle').value;
+            if(!t) return;
+            let img = await uploadImage('projImage'); let data = {title:t, category:document.getElementById('projCategory').value};
+            if(img) data.image=img; if(k) db.ref('projects/'+k).update(data,()=>resetForm('proj')); else db.ref('projects').push(data,()=>resetForm('proj'));
+        }
+
+        async function saveCategoryPost() {
+            const k = document.getElementById('cpEditKey').value, t = document.getElementById('cpTitle').value;
+            if(!t) return;
+            let img = await uploadImage('cpImage'); let data = {title:t, parent_service:document.getElementById('cpParentService').value};
+            if(img) data.image=img; if(k) db.ref('category_posts/'+k).update(data,()=>resetForm('cp')); else db.ref('category_posts').push(data,()=>resetForm('cp'));
+        }
+
+        async function saveBlog() {
+            const k = document.getElementById('blogEditKey').value, t = document.getElementById('blogTitle').value;
+            if(!t) return;
+            let img = await uploadImage('blogImage'); let data = {title:t, link:document.getElementById('blogLink').value, type:document.getElementById('blogType').value};
+            if(img) data.image=img; if(k) db.ref('blogs/'+k).update(data,()=>resetForm('blog')); else db.ref('blogs').push(data,()=>resetForm('blog'));
+        }
+
+        async function saveSpeciality() {
+            let img = await uploadImage('specImage'); let data = {title:document.getElementById('specTitle').value};
+            if(img) { data.image=img; db.ref('speciality').push(data,()=>resetForm('spec')); } else alert("Image Required");
+        }
+
+        function resetForm(p) { 
+            document.getElementById(p+'EditKey').value=''; document.getElementById(p+'Title').value=''; 
+            if(document.getElementById(p+'Btn')) document.getElementById(p+'Btn').innerText = 'Add New Content';
+            if(document.getElementById(p+'Cancel')) document.getElementById(p+'Cancel').style.display='none';
+            alert("Done!");
+        }
+
+        function deleteItem(p) { if(confirm("Confirm deletion?")) db.ref(p).remove(); }
+
+        function editItem(p, k, t, c, i, l) {
+            document.getElementById(p+'EditKey').value = k; document.getElementById(p+'Title').value = t;
+            if(p==='svc' || p==='proj') document.getElementById(p+'Category').value = c;
+            if(p==='blog') { document.getElementById('blogType').value=c; document.getElementById('blogLink').value=l; }
+            if(p==='cp') document.getElementById('cpParentService').value=c;
+            
+            if(document.getElementById(p+'Btn')) document.getElementById(p+'Btn').innerText = 'Save Updated Item';
+            if(document.getElementById(p+'Cancel')) document.getElementById(p+'Cancel').style.display='block';
+            
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function renderList(snap, cid, p, path) {
+            const l = document.getElementById(cid); l.innerHTML = '';
+            const data = snap.val();
+            if(data) {
+                Object.keys(data).forEach(k => {
+                    const it = data[k]; const tEsc = it.title ? it.title.replace(/'/g, "\\'") : '';
+                    let extra = (p==='cp')? it.parent_service : (it.category || ''); 
+                    if(p==='blog') extra = it.type; let link = (p==='blog')? `','${it.link}` : '';
+                    l.innerHTML += `<div class="list-item">
+                        <div class="item-preview"><img src="${it.image||''}"><div>${it.title}<br><small style="color:blue">${extra}</small></div></div>
+                        <div class="action-btns">
+                            <button class="small-btn bg-edit" onclick="editItem('${p}','${k}','${tEsc}','${extra}',null${link})">Edit</button>
+                            <button class="small-btn bg-del" onclick="deleteItem('${path}/${k}')">Del</button>
+                        </div>
+                    </div>`;
+                });
+            } else l.innerHTML = '<p style="padding:10px; font-size:12px;">No items found in this section.</p>';
+        }
+
+        // --- Updates ---
+        async function updateHero() { let img = await uploadImage('heroImage'); let data = {title:document.getElementById('heroTitle').value, subtitle:document.getElementById('heroSubtitle').value, desc:document.getElementById('heroDesc').value}; if(img) data.image=img; db.ref('hero').update(data,()=>alert("Hero Updated")); }
+        async function updateAbout() { let img = await uploadImage('aboutImage'); let data = {title:document.getElementById('aboutTitle').value, subtitle:document.getElementById('aboutSub').value, desc:document.getElementById('aboutDesc').value}; if(img) data.image=img; db.ref('about').update(data,()=>alert("Profile Updated")); }
+        async function updateWhyContent() { let img = await uploadImage('whyImage'); let data = {title:document.getElementById('whyTitle').value, desc:document.getElementById('whyDesc').value}; if(img) data.image=img; db.ref('whyChoose').update(data,()=>alert("Features Updated")); }
+        async function updateLogo() { let img = await uploadImage('siteLogo'); if(img) db.ref('siteConfig/logo').set(img,()=>alert("Brand Logo Updated")); }
+        function updateContactInfo() { db.ref('contactInfo').set({email:document.getElementById('contactEmail').value, phone:document.getElementById('contactPhone').value, addr:document.getElementById('contactAddr').value}); db.ref('socialLinks').set({facebook:document.getElementById('socFb').value, linkedin:document.getElementById('socLi').value, github:document.getElementById('socGh').value},()=>alert("Site Info Saved")); }
+    </script>
+</body>
+</html>
